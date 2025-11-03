@@ -110,10 +110,14 @@ class DecentralizedServer:
                     line, buffer = buffer.split('\n', 1)
                     if line:
                         lstrip = line.lstrip()
-                        if lstrip.startswith('{') and lstrip.endswith('}'):
-                            self._process_message(client_socket, line)
-                        else:
-                            self._process_text_command(client_socket, line.strip())
+                        if lstrip.startswith('{'):
+                            try:
+                                json.loads(lstrip)
+                                self._process_message(client_socket, lstrip)
+                                continue
+                            except Exception:
+                                pass
+                        self._process_text_command(client_socket, line.strip())
                         
             except ConnectionResetError:
                 break
@@ -808,4 +812,5 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print("\nОстановка сервера...")
         server.stop()
+
 
