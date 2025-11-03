@@ -1,5 +1,7 @@
 # MPIP
 
+[![Python application](https://github.com/h3lix-it/mpip/actions/workflows/pythofdn-app.yml/badge.svg)](https://github.com/h3lix-it/mpip/actions/workflows/pythofdn-app.yml)
+
 Самописный Open-Source Децентрализованный Мессенджер + Протокол (да, жри говно, я такое могу сделать, а ты нет))))) MPIP!!!!
 
 ### Как запустить
