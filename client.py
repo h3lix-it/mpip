@@ -8,7 +8,7 @@ from encryption import EncryptionManager
 
 
 class DecentralizedClient:
-	"""Базовый клиент MPIP (ну типо можно взять и использовать, если хочешь сделать свой клиент ага, а можешь так юзать ага)."""
+	"""Базовый клиент MPIP (ну типо можно взять и использовать, если хочешь сделать свой клиент, а можешь так юзать)."""
 	
 	def __init__(self, server_host, server_port, username, password=None):
 		"""
@@ -18,7 +18,7 @@ class DecentralizedClient:
 			server_host: Адрес сервера
 			server_port: Порт сервера
 			username: Имя пользователя
-			password: Пароль для шифрования (опционАльно)
+			password: Пароль для шифрования (опционально)
 		"""
 		self.server_host = server_host
 		self.server_port = server_port
@@ -45,9 +45,12 @@ class DecentralizedClient:
 			self.socket.send(join_msg.encode('utf-8'))
 			
 			if not self.shared_password and self.encryption_manager:
-				key_b64 = self.encryption_manager.get_key_b64()
-				kx = MessageProtocol.create_message(MessageProtocol.MSG_TYPE_KEY_EXCHANGE, key_b64, username=self.username)
-				self.socket.send(kx.encode('utf-8'))
+				import time
+				time.sleep(0.5)
+				if not self._adopted_key:
+					key_b64 = self.encryption_manager.get_key_b64()
+					kx = MessageProtocol.create_message(MessageProtocol.MSG_TYPE_KEY_EXCHANGE, key_b64, username=self.username)
+					self.socket.send(kx.encode('utf-8'))
 			
 			receive_thread = threading.Thread(target=self._receive_messages, daemon=True)
 			receive_thread.start()
@@ -150,14 +153,13 @@ class DecentralizedClient:
 				if sender == self.username:
 					return
 				try:
-					owner = sender if sender < self.username else self.username
-					if owner == sender:
-						if self._session_key_owner != sender or not self._adopted_key:
+					if sender < self.username:
+						if not self._adopted_key or self._session_key_owner != sender:
 							self.encryption_manager.set_key_b64(content)
 							self._adopted_key = True
 							self._session_key_owner = sender
-							print("[Сеансовый ключ принят]", flush=True)
-					else:
+							print(f"[Сеансовый ключ принят от {sender}]", flush=True)
+					elif sender > self.username and not self._adopted_key:
 						key_b64 = self.encryption_manager.get_key_b64()
 						kx = MessageProtocol.create_message(MessageProtocol.MSG_TYPE_KEY_EXCHANGE, key_b64, username=self.username)
 						self.socket.send(kx.encode('utf-8'))
@@ -342,7 +344,7 @@ class DecentralizedClient:
 						encrypted=True
 					)
 				except Exception as encrypt_error:
-					print(f"\n[ОШИБКА] Ошибка шифрования файла: {encrypt_error}", flush=True)
+					print(f"\n[ОШИБКА] ШОШЫБКА шифрования файла: {encrypt_error}", flush=True)
 					return False
 			else:
 				file_data_base64 = base64.b64encode(file_data).decode('utf-8')
@@ -490,7 +492,7 @@ def run_client_interactive(server_host, server_port, username, password=None):
 			except KeyboardInterrupt:
 				break
 			except Exception as e:
-				print(f"Ошибка: {e}")
+				print(f"Пошел нахуй: {e}")
 				break
 	
 	except KeyboardInterrupt:
@@ -512,7 +514,4 @@ if __name__ == "__main__":
 	password = sys.argv[4] if len(sys.argv) > 4 else None
 	
 	run_client_interactive(server_host, server_port, username, password)
-
-
-
 
