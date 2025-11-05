@@ -22,13 +22,13 @@ class DecentralizedServer:
         self.host = host
         self.port = port
         self.socket = None
-        self.clients = {}  # {socket: {...}}
+        self.clients = {}
         self.running = False
         self.encryption_manager = EncryptionManager(password) if password else None
         self.shared_password = password
-        self.user_db = {}  # {username: password}
+        self.user_db = {} 
         self.server_rooms = set(["main"]) 
-        self.user_contacts = {}  # {username: set(contact_names)}
+        self.user_contacts = {}
         self._init_db()
         self._load_users_from_db()
         self._load_contacts_from_db()
@@ -99,7 +99,7 @@ class DecentralizedServer:
                 if not ready[0]:
                     continue
                 
-                data = client_socket.recv(4096).decode('utf-8', errors='ignore')
+                data = client_socket.recv(8192).decode('utf-8', errors='ignore')
                 
                 if not data:
                     break
@@ -112,9 +112,12 @@ class DecentralizedServer:
                         lstrip = line.lstrip()
                         if lstrip.startswith('{'):
                             try:
-                                json.loads(lstrip)
-                                self._process_message(client_socket, lstrip)
-                                continue
+                                parsed = json.loads(lstrip)
+                                if parsed:
+                                    self._process_message(client_socket, lstrip)
+                                    continue
+                            except json.JSONDecodeError as e:
+                                pass
                             except Exception:
                                 pass
                         self._process_text_command(client_socket, line.strip())
@@ -176,6 +179,11 @@ class DecentralizedServer:
             file_size = message.get('file_size', 0)
             encrypted = message.get('encrypted', False)
             
+            try:
+                if not message_data.endswith("\n"):
+                    message_data = message_data + "\n"
+            except Exception:
+                pass
             self._broadcast(message_data, exclude=None)
             
             size_mb = file_size / (1024 * 1024)
@@ -189,6 +197,14 @@ class DecentralizedServer:
                 client_socket.send(pong.encode('utf-8'))
             except:
                 pass
+        
+        elif msg_type == MessageProtocol.MSG_TYPE_KEY_EXCHANGE:
+            try:
+                if not message_data.endswith("\n"):
+                    message_data = message_data + "\n"
+            except Exception:
+                pass
+            self._broadcast(message_data, exclude=client_socket)
         
         elif msg_type == MessageProtocol.MSG_TYPE_LEAVE:
             self._disconnect_client(client_socket)
@@ -313,6 +329,14 @@ class DecentralizedServer:
                 if ci.get('authenticated') and ci.get('username'):
                     users.append(f"{ci['username']}[{ci.get('status','online')}]")
             self._send_line(client_socket, "Users: " + ", ".join(users))
+            return
+
+        if cmd == '/online':
+            users = []
+            for ci in self.clients.values():
+                if ci.get('username'):
+                    users.append(f"{ci['username']}[{ci.get('status','online')}]")
+            self._send_line(client_socket, "Online: " + ", ".join(users))
             return
 
         if cmd == '/history' and len(tokens) >= 2:
@@ -812,5 +836,4 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print("\nОстановка сервера...")
         server.stop()
-
 
