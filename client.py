@@ -8,7 +8,7 @@ from encryption import EncryptionManager
 
 
 class DecentralizedClient:
-	"""Базовый клиент MPIP (ну типо можно взять и использовать, если хочешь сделать свой клиент, а можешь так юзать)."""
+	"""Базовый клиент MPIP (ну типо можно взять и использовать, если хочешь сделать свой клиент, а можешь так юзать ага)."""
 	
 	def __init__(self, server_host, server_port, username, password=None):
 		"""
@@ -512,5 +512,6 @@ if __name__ == "__main__":
 	password = sys.argv[4] if len(sys.argv) > 4 else None
 	
 	run_client_interactive(server_host, server_port, username, password)
+
 
 
