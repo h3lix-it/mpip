@@ -18,7 +18,7 @@ class DecentralizedClient:
 			server_host: Адрес сервера
 			server_port: Порт сервера
 			username: Имя пользователя
-			password: Пароль для шифрования (опционально)
+			password: Пароль для шифрования (опционАльно)
 		"""
 		self.server_host = server_host
 		self.server_port = server_port
@@ -512,4 +512,5 @@ if __name__ == "__main__":
 	password = sys.argv[4] if len(sys.argv) > 4 else None
 	
 	run_client_interactive(server_host, server_port, username, password)
+
 
